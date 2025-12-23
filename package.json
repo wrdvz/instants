@@ -1,0 +1,11 @@
+{
+  "name": "instants",
+  "type": "module",
+  "scripts": {
+    "build": "astro build"
+  },
+  "dependencies": {
+    "astro": "^4.0.0",
+    "@notionhq/client": "^2.2.15"
+  }
+}
