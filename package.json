@@ -7,5 +7,6 @@
   "dependencies": {
     "astro": "^4.0.0",
     "@notionhq/client": "^2.2.15"
+    "@astrojs/cloudflare": "^10.0.0"
   }
 }
