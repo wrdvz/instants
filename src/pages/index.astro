@@ -21,13 +21,22 @@ const response = await notion.databases.query({
   ],
 });
 
-const instants = response.results.map(page => {
-  const image = page.properties.Image.files[0];
-  return {
-    title: page.properties.Title.title[0]?.plain_text ?? "",
-    imageUrl: image?.file?.url || image?.external?.url,
-  };
-});
+const instants = response.results
+  .map(page => {
+    const imageProp = page.properties.Image;
+
+    if (!imageProp || imageProp.type !== "files" || imageProp.files.length === 0) {
+      return null;
+    }
+
+    const image = imageProp.files[0];
+
+    return {
+      title: page.properties.Title?.title?.[0]?.plain_text ?? "",
+      imageUrl: image.file?.url || image.external?.url,
+    };
+  })
+  .filter(Boolean);
 ---
 
 <!DOCTYPE html>
