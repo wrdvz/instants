@@ -1,6 +1,8 @@
 ---
+import { Client } from "@notionhq/client";
+
 const notion = new Client({
-  auth: import.meta.env.NOTION_TOKEN,
+  auth: import.meta.env.NOTION_API_KEY,
 });
 
 const databaseId = import.meta.env.NOTION_DATABASE_ID;
