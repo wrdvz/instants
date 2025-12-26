@@ -80,6 +80,30 @@ body {
   cursor: pointer;
 }
 
+/* Lightbox image animation */
+.lightbox img {
+  max-width: 100vw;
+  max-height: 100vh;
+  object-fit: contain;
+  transition: transform 0.35s ease, opacity 0.25s ease;
+}
+
+/* animation helpers */
+.slide-in-right {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.slide-in-left {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slide-active {
+  transform: translateX(0);
+  opacity: 1;
+}
+
 /* Desktop container */
 @media (min-width: 768px) {
   .feed {
