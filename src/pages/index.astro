@@ -1,36 +1,32 @@
 ---
 import { Client } from "@notionhq/client";
+import "../styles/main.css";
+
+const { NOTION_API_KEY, NOTION_DATABASE_ID } = Astro.locals.runtime.env;
 
 const notion = new Client({
-  auth: process.env.NOTION_API_KEY,
+  auth: NOTION_API_KEY,
 });
 
-const databaseId = process.env.NOTION_DATABASE_ID;
-
 const response = await notion.databases.query({
-  database_id: databaseId,
+  database_id: NOTION_DATABASE_ID,
   filter: {
     property: "Published",
     checkbox: { equals: true },
   },
   sorts: [
-    {
-      property: "Order",
-      direction: "ascending",
-    },
+    { property: "Order", direction: "ascending" },
   ],
 });
 
 const instants = response.results
   .map(page => {
     const imageProp = page.properties.Image;
-
     if (!imageProp || imageProp.type !== "files" || imageProp.files.length === 0) {
       return null;
     }
 
     const image = imageProp.files[0];
-
     return {
       title: page.properties.Title?.title?.[0]?.plain_text ?? "",
       imageUrl: image.file?.url || image.external?.url,
@@ -44,12 +40,19 @@ const instants = response.results
   <head>
     <meta charset="utf-8" />
     <title>Instants</title>
-    <link rel="stylesheet" href="/src/styles/main.css" />
   </head>
+
   <body>
     <main class="feed">
+      <!-- test visuel -->
+      <p>Instants: {instants.length}</p>
+
       {instants.map(i => (
-        <img src={i.imageUrl} alt={i.title} loading="lazy" />
+        <img
+          src={i.imageUrl}
+          alt={i.title}
+          loading="lazy"
+        />
       ))}
     </main>
   </body>
