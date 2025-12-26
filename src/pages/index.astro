@@ -94,26 +94,36 @@ const instants = response.results
   }
 
   function show(newIndex, direction = "right") {
-    if (newIndex < 0 || newIndex >= images.length) return;
+  if (newIndex < 0 || newIndex >= images.length) return;
 
-    const incomingClass =
-      direction === "right" ? "slide-in-right" : "slide-in-left";
+  const incomingClass =
+    direction === "right" ? "slide-in-right" : "slide-in-left";
 
-    lightboxImg.className = incomingClass;
-    lightboxImg.src = images[newIndex];
+  // reset total
+  lightboxImg.className = "";
+  lightboxImg.style.transition = "none";
+  lightboxImg.src = images[newIndex];
 
-    preload(newIndex + 1);
-    preload(newIndex - 1);
+  // preload voisins
+  preload(newIndex + 1);
+  preload(newIndex - 1);
 
-    requestAnimationFrame(() => {
-      lightboxImg.classList.add("slide-active");
-    });
+  // forcer reflow (clé absolue)
+  void lightboxImg.offsetWidth;
 
-    index = newIndex;
+  // appliquer animation
+  lightboxImg.classList.add(incomingClass);
 
-    btnPrev.style.display = index > 0 ? "block" : "none";
-    btnNext.style.display = index < images.length - 1 ? "block" : "none";
-  }
+  requestAnimationFrame(() => {
+    lightboxImg.style.transition = "";
+    lightboxImg.classList.add("slide-active");
+  });
+
+  index = newIndex;
+
+  btnPrev.style.display = index > 0 ? "block" : "none";
+  btnNext.style.display = index < images.length - 1 ? "block" : "none";
+}
 
   document.querySelectorAll(".feed img").forEach(img => {
     img.addEventListener("click", () => {
