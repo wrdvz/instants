@@ -14,9 +14,7 @@ const response = await notion.databases.query({
     property: "Published",
     checkbox: { equals: true },
   },
-  sorts: [
-    { property: "Order", direction: "ascending" },
-  ],
+  sorts: [{ property: "Order", direction: "ascending" }],
 });
 
 const instants = response.results
@@ -44,9 +42,6 @@ const instants = response.results
 
   <body>
     <main class="feed">
-      <!-- test visuel -->
-     
-
       {instants.map(i => (
         <img
           src={i.imageUrl}
@@ -55,5 +50,39 @@ const instants = response.results
         />
       ))}
     </main>
+
+    <!-- Lightbox -->
+    <div id="lightbox" hidden>
+      <img />
+    </div>
+
+    <script>
+      // fade-in images
+      document.querySelectorAll(".feed img").forEach(img => {
+        if (img.complete) {
+          img.classList.add("loaded");
+        } else {
+          img.addEventListener("load", () => {
+            img.classList.add("loaded");
+          });
+        }
+      });
+
+      // lightbox
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImg = lightbox.querySelector("img");
+
+      document.querySelectorAll(".feed img").forEach(img => {
+        img.addEventListener("click", () => {
+          lightboxImg.src = img.src;
+          lightbox.hidden = false;
+        });
+      });
+
+      lightbox.addEventListener("click", () => {
+        lightbox.hidden = true;
+        lightboxImg.src = "";
+      });
+    </script>
   </body>
 </html>
