@@ -24,10 +24,11 @@ const instants = response.results
       return null;
     }
 
-    const image = imageProp.files[0];
     return {
       title: page.properties.Title?.title?.[0]?.plain_text ?? "",
-      imageUrl: image.file?.url || image.external?.url,
+      images: imageProp.files.map(
+        f => f.file?.url || f.external?.url
+      ),
     };
   })
   .filter(Boolean);
@@ -46,16 +47,20 @@ const instants = response.results
     <main class="feed">
       {instants.map(i => (
         <img
-          src={i.imageUrl}
+          src={i.images[0]}
           alt={i.title}
           loading="eager"
+          data-images={JSON.stringify(i.images)}
         />
       ))}
     </main>
 
     <!-- LIGHTBOX -->
     <div id="lightbox" class="lightbox">
+      <button class="close">←</button>
+      <button class="nav prev">‹</button>
       <img />
+      <button class="nav next">›</button>
     </div>
 
     <!-- INTERACTIONS -->
@@ -71,15 +76,47 @@ const instants = response.results
         }
       });
 
-      // Lightbox
+      // Lightbox carousel
       const lightbox = document.getElementById("lightbox");
       const lightboxImg = lightbox.querySelector("img");
+      const btnPrev = lightbox.querySelector(".prev");
+      const btnNext = lightbox.querySelector(".next");
+      const btnClose = lightbox.querySelector(".close");
+
+      let images = [];
+      let index = 0;
+
+      function update() {
+        lightboxImg.src = images[index];
+        btnPrev.style.display = index > 0 ? "block" : "none";
+        btnNext.style.display = index < images.length - 1 ? "block" : "none";
+      }
 
       document.querySelectorAll(".feed img").forEach(img => {
         img.addEventListener("click", () => {
-          lightboxImg.src = img.src;
+          images = JSON.parse(img.dataset.images);
+          index = 0;
+          update();
           lightbox.style.display = "flex";
         });
+      });
+
+      btnPrev.addEventListener("click", e => {
+        e.stopPropagation();
+        index--;
+        update();
+      });
+
+      btnNext.addEventListener("click", e => {
+        e.stopPropagation();
+        index++;
+        update();
+      });
+
+      btnClose.addEventListener("click", e => {
+        e.stopPropagation();
+        lightbox.style.display = "none";
+        lightboxImg.src = "";
       });
 
       lightbox.addEventListener("click", () => {
