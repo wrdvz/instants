@@ -77,52 +77,74 @@ const instants = response.results
       });
 
       // Lightbox carousel
-      const lightbox = document.getElementById("lightbox");
-      const lightboxImg = lightbox.querySelector("img");
-      const btnPrev = lightbox.querySelector(".prev");
-      const btnNext = lightbox.querySelector(".next");
-      const btnClose = lightbox.querySelector(".close");
+    
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = lightbox.querySelector("img");
+  const btnPrev = lightbox.querySelector(".prev");
+  const btnNext = lightbox.querySelector(".next");
+  const btnClose = lightbox.querySelector(".close");
 
-      let images = [];
-      let index = 0;
+  let images = [];
+  let index = 0;
 
-      function update() {
-        lightboxImg.src = images[index];
-        btnPrev.style.display = index > 0 ? "block" : "none";
-        btnNext.style.display = index < images.length - 1 ? "block" : "none";
-      }
+  function preload(i) {
+    if (!images[i]) return;
+    const img = new Image();
+    img.src = images[i];
+  }
 
-      document.querySelectorAll(".feed img").forEach(img => {
-        img.addEventListener("click", () => {
-          images = JSON.parse(img.dataset.images);
-          index = 0;
-          update();
-          lightbox.style.display = "flex";
-        });
-      });
+  function show(newIndex, direction = "right") {
+    if (newIndex < 0 || newIndex >= images.length) return;
 
-      btnPrev.addEventListener("click", e => {
-        e.stopPropagation();
-        index--;
-        update();
-      });
+    const incomingClass =
+      direction === "right" ? "slide-in-right" : "slide-in-left";
 
-      btnNext.addEventListener("click", e => {
-        e.stopPropagation();
-        index++;
-        update();
-      });
+    lightboxImg.className = incomingClass;
+    lightboxImg.src = images[newIndex];
 
-      btnClose.addEventListener("click", e => {
-        e.stopPropagation();
-        lightbox.style.display = "none";
-        lightboxImg.src = "";
-      });
+    preload(newIndex + 1);
+    preload(newIndex - 1);
 
-      lightbox.addEventListener("click", () => {
-        lightbox.style.display = "none";
-        lightboxImg.src = "";
-      });
+    requestAnimationFrame(() => {
+      lightboxImg.classList.add("slide-active");
+    });
+
+    index = newIndex;
+
+    btnPrev.style.display = index > 0 ? "block" : "none";
+    btnNext.style.display = index < images.length - 1 ? "block" : "none";
+  }
+
+  document.querySelectorAll(".feed img").forEach(img => {
+    img.addEventListener("click", () => {
+      images = JSON.parse(img.dataset.images);
+      index = 0;
+      lightbox.style.display = "flex";
+      show(0);
+    });
+  });
+
+  btnPrev.onclick = e => {
+    e.stopPropagation();
+    show(index - 1, "left");
+  };
+
+  btnNext.onclick = e => {
+    e.stopPropagation();
+    show(index + 1, "right");
+  };
+
+  btnClose.onclick = e => {
+    e.stopPropagation();
+    lightbox.style.display = "none";
+    lightboxImg.src = "";
+  };
+
+  lightbox.onclick = () => {
+    lightbox.style.display = "none";
+    lightboxImg.src = "";
+  };
+
     </script>
   </body>
 </html>
