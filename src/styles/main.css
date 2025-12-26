@@ -7,14 +7,19 @@ html,
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;
   background: white;
 }
 
 /* Feed */
+
 .feed {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 /* Images */
@@ -23,7 +28,30 @@ body {
   aspect-ratio: 4 / 5;
   object-fit: cover;
   display: block;
-  background: #eee;
+  background: #f2f2f2;
+
+  opacity: 0;
+  transition: opacity 0.25s ease-out;
+}
+
+.feed img.loaded {
+  opacity: 1;
+}
+
+#lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 /* Desktop container */
