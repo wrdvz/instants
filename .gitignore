@@ -1,0 +1,13 @@
+# Secrets
+.env
+.dev.vars
+
+# Dependencies
+node_modules/
+
+# Astro / build
+dist/
+.astro/
+
+# Cloudflare
+.wrangler/
