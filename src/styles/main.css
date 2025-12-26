@@ -3,15 +3,15 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
+  padding: 0;
   background: white;
 }
 
 /* Feed */
 .feed {
-  max-width: 960px;
-  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2px;
@@ -20,29 +20,26 @@ body {
 /* Images */
 .feed img {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   display: block;
   background: #eee;
 }
 
-/* Tablet */
-@media (max-width: 900px) {
+/* Desktop container */
+@media (min-width: 768px) {
   .feed {
-    grid-template-columns: repeat(3, 1fr);
+    max-width: 960px;
+    margin: 0 auto;
   }
 }
 
-/* Mobile */
-@media (max-width: 600px) {
+/* Mobile full bleed */
+@media (max-width: 767px) {
   .feed {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Petit mobile */
-@media (max-width: 420px) {
-  .feed {
-    grid-template-columns: repeat(1, 1fr);
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    gap: 1px;
   }
 }
