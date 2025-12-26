@@ -99,8 +99,14 @@ const instants = response.results
   const incomingClass =
     direction === "right" ? "slide-in-right" : "slide-in-left";
 
-  // reset total
-  lightboxImg.className = "";
+  // Nettoyage ciblé (PAS className = "")
+  lightboxImg.classList.remove(
+    "slide-in-right",
+    "slide-in-left",
+    "slide-active"
+  );
+
+  // coupe la transition pour le reset
   lightboxImg.style.transition = "none";
   lightboxImg.src = images[newIndex];
 
@@ -108,10 +114,10 @@ const instants = response.results
   preload(newIndex + 1);
   preload(newIndex - 1);
 
-  // forcer reflow (clé absolue)
+  // force reflow
   void lightboxImg.offsetWidth;
 
-  // appliquer animation
+  // applique animation
   lightboxImg.classList.add(incomingClass);
 
   requestAnimationFrame(() => {
