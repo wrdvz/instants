@@ -38,26 +38,29 @@ const instants = response.results
   <head>
     <meta charset="utf-8" />
     <title>Instants</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
 
   <body>
+    <!-- FEED -->
     <main class="feed">
       {instants.map(i => (
         <img
           src={i.imageUrl}
           alt={i.title}
-          loading="lazy"
+          loading="eager"
         />
       ))}
     </main>
 
-    <!-- Lightbox -->
-    <div id="lightbox" hidden>
+    <!-- LIGHTBOX -->
+    <div id="lightbox" class="lightbox">
       <img />
     </div>
 
+    <!-- INTERACTIONS -->
     <script>
-      // fade-in images
+      // Fade-in images
       document.querySelectorAll(".feed img").forEach(img => {
         if (img.complete) {
           img.classList.add("loaded");
@@ -68,19 +71,19 @@ const instants = response.results
         }
       });
 
-      // lightbox
+      // Lightbox
       const lightbox = document.getElementById("lightbox");
       const lightboxImg = lightbox.querySelector("img");
 
       document.querySelectorAll(".feed img").forEach(img => {
         img.addEventListener("click", () => {
           lightboxImg.src = img.src;
-          lightbox.hidden = false;
+          lightbox.style.display = "flex";
         });
       });
 
       lightbox.addEventListener("click", () => {
-        lightbox.hidden = true;
+        lightbox.style.display = "none";
         lightboxImg.src = "";
       });
     </script>
