@@ -6,13 +6,18 @@ import "../styles/main.css";
    ENV (Cloudflare Pages compatible)
 ================================ */
 
-const {
-  NOTION_API_KEY,
-  NOTION_DATABASE_ID,
-  NOTION_PROFILE_DATABASE_ID
-} = import.meta.env;
+const runtimeEnv = Astro.locals?.runtime?.env ?? {};
+const buildEnv = import.meta.env ?? {};
 
-/* Guard rail explicite */
+const NOTION_API_KEY =
+  runtimeEnv.NOTION_API_KEY || buildEnv.NOTION_API_KEY;
+
+const NOTION_DATABASE_ID =
+  runtimeEnv.NOTION_DATABASE_ID || buildEnv.NOTION_DATABASE_ID;
+
+const NOTION_PROFILE_DATABASE_ID =
+  runtimeEnv.NOTION_PROFILE_DATABASE_ID || buildEnv.NOTION_PROFILE_DATABASE_ID;
+
 if (!NOTION_API_KEY || !NOTION_DATABASE_ID || !NOTION_PROFILE_DATABASE_ID) {
   console.error("ENV MISSING", {
     NOTION_API_KEY: !!NOTION_API_KEY,
@@ -21,8 +26,6 @@ if (!NOTION_API_KEY || !NOTION_DATABASE_ID || !NOTION_PROFILE_DATABASE_ID) {
   });
   throw new Error("Missing environment variables");
 }
-
-console.log("ENV OK");
 
 /* ===============================
    NOTION CLIENT
