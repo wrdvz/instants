@@ -52,6 +52,7 @@ body {
 /* Frame verrouillé 4/5 */
 .lightbox-frame {
   touch-action: pan-y;
+  overscroll-behavior: contain;
   position: relative;
   width: min(100vw, 80vh * 4 / 5);
   aspect-ratio: 4 / 5;
