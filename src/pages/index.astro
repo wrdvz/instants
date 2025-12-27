@@ -63,165 +63,168 @@ const instants = response.results
 
     <!-- INTERACTIONS -->
     <script>
-      /* fade-in feed */
-      document.querySelectorAll(".feed img").forEach(img => {
-        if (img.complete) img.classList.add("loaded");
-        else img.addEventListener("load", () => img.classList.add("loaded"));
-      });
-
-      const lightbox = document.getElementById("lightbox");
-const frame = document.querySelector(".lightbox-frame");
-const imgCurrent = frame.querySelector(".img.current");
-const imgNext = frame.querySelector(".img.next");
-const btnPrev = lightbox.querySelector(".prev");
-const btnNext = lightbox.querySelector(".next");
-const btnClose = lightbox.querySelector(".close");
-
-let images = [];
-let index = 0;
-
-let startX = 0;
-let deltaX = 0;
-let dragging = false;
-
-const THRESHOLD = 0.25;
-
-function openLightbox(imgs) {
-  images = imgs;
-  index = 0;
-  imgCurrent.src = images[0];
-  imgCurrent.style.transform = "translateX(0)";
-  imgNext.style.opacity = "0";
-  lightbox.style.display = "flex";
-  updateButtons();
-}
-
-function closeLightbox() {
-  lightbox.style.display = "none";
-  images = [];
-}
-
-function updateButtons() {
-  btnPrev.style.display = index > 0 ? "block" : "none";
-  btnNext.style.display = index < images.length - 1 ? "block" : "none";
-}
-
-function preload(i) {
-  if (!images[i]) return;
-  const img = new Image();
-  img.src = images[i];
-}
-
-frame.addEventListener("touchstart", e => {
-  if (!images.length) return;
-
-  dragging = true;
-  startX = e.touches[0].clientX;
-  deltaX = 0;
-
-  imgCurrent.style.transition = "none";
-  imgNext.style.transition = "none";
-});
-
-frame.addEventListener("touchmove", e => {
-  if (!dragging) return;
-
-  deltaX = e.touches[0].clientX - startX;
-  const width = frame.offsetWidth;
-  const direction = deltaX < 0 ? 1 : -1;
-  const target = index + direction;
-
-  if (!images[target]) return;
-
-  imgNext.src = images[target];
-  imgNext.style.opacity = "1";
-
-  imgCurrent.style.transform = `translateX(${deltaX}px)`;
-  imgNext.style.transform =
-    `translateX(${deltaX > 0 ? deltaX - width : deltaX + width}px)`;
-});
-
-frame.addEventListener("touchend", () => {
-  if (!dragging) return;
-  dragging = false;
-
-  const width = frame.offsetWidth;
-  const progress = Math.abs(deltaX) / width;
-
-  imgCurrent.style.transition = "transform 0.35s ease";
-  imgNext.style.transition = "transform 0.35s ease";
-
-  if (progress > THRESHOLD) {
-    commitSwipe(deltaX < 0 ? 1 : -1);
-  } else {
-    cancelSwipe();
-  }
-});
-
-function commitSwipe(direction) {
-  const width = frame.offsetWidth;
-
-  imgCurrent.style.transform =
-    `translateX(${direction > 0 ? -width : width}px)`;
-  imgNext.style.transform = "translateX(0)";
-
-  setTimeout(() => {
-    index += direction;
-    imgCurrent.src = imgNext.src;
-    resetImages();
-    updateButtons();
-  }, 350);
-}
-
-function cancelSwipe() {
-  imgCurrent.style.transform = "translateX(0)";
-  imgNext.style.transform =
-    `translateX(${deltaX < 0 ? "100%" : "-100%"})`;
-
-  setTimeout(resetImages, 350);
-}
-
-function resetImages() {
-  imgCurrent.style.transition = "";
-  imgNext.style.transition = "";
-  imgCurrent.style.transform = "";
-  imgNext.style.transform = "";
-  imgNext.style.opacity = "0";
-}
-
-// boutons = même logique que swipe
-btnPrev.onclick = e => {
-  e.stopPropagation();
-  if (index > 0) commitSwipe(-1);
-};
-
-btnNext.onclick = e => {
-  e.stopPropagation();
-  if (index < images.length - 1) commitSwipe(1);
-};
-
-btnClose.onclick = e => {
-  e.stopPropagation();
-  closeLightbox();
-};
-
-document.addEventListener("touchmove", e => {
-  if (lightbox.style.display === "flex") e.preventDefault();
-}, { passive: false });
-
-// feed
-document.querySelectorAll(".feed img").forEach(img => {
-  img.addEventListener("click", () => {
-    openLightbox(JSON.parse(img.dataset.images));
+  /* fade-in feed */
+  document.querySelectorAll(".feed img").forEach(img => {
+    if (img.complete) img.classList.add("loaded");
+    else img.addEventListener("load", () => img.classList.add("loaded"));
   });
-});
 
-document.addEventListener("touchmove", e => {
-  if (lightbox.style.display === "flex") {
-    e.preventDefault();
+  const lightbox = document.getElementById("lightbox");
+  const frame = document.querySelector(".lightbox-frame");
+  const imgCurrent = frame.querySelector(".img.current");
+  const imgNext = frame.querySelector(".img.next");
+  const btnPrev = lightbox.querySelector(".prev");
+  const btnNext = lightbox.querySelector(".next");
+  const btnClose = lightbox.querySelector(".close");
+
+  let images = [];
+  let index = 0;
+
+  let startX = 0;
+  let deltaX = 0;
+  let dragging = false;
+  let swipeTarget = null;
+
+  const THRESHOLD = 0.25;
+
+  function openLightbox(imgs) {
+    images = imgs;
+    index = 0;
+    imgCurrent.src = images[0];
+    imgCurrent.style.transform = "translateX(0)";
+    imgNext.style.opacity = "0";
+    lightbox.style.display = "flex";
+    updateButtons();
+    preload(1);
   }
-}, { passive: false });
 
-    </script>
+  function closeLightbox() {
+    lightbox.style.display = "none";
+    images = [];
+  }
+
+  function updateButtons() {
+    btnPrev.style.display = index > 0 ? "block" : "none";
+    btnNext.style.display = index < images.length - 1 ? "block" : "none";
+  }
+
+  function preload(i) {
+    if (!images[i]) return;
+    const img = new Image();
+    img.src = images[i];
+  }
+
+  frame.addEventListener("touchstart", e => {
+    if (!images.length) return;
+
+    dragging = true;
+    startX = e.touches[0].clientX;
+    deltaX = 0;
+    swipeTarget = null;
+
+    imgCurrent.style.transition = "none";
+    imgNext.style.transition = "none";
+  });
+
+  frame.addEventListener("touchmove", e => {
+    if (!dragging) return;
+
+    deltaX = e.touches[0].clientX - startX;
+    const width = frame.offsetWidth;
+    const direction = deltaX < 0 ? 1 : -1;
+    const target = index + direction;
+
+    if (!images[target]) return;
+
+    if (swipeTarget !== target) {
+      swipeTarget = target;
+      imgNext.src = images[target];
+      imgNext.style.opacity = "1";
+    }
+
+    imgCurrent.style.transform = `translateX(${deltaX}px)`;
+    imgNext.style.transform =
+      `translateX(${deltaX > 0 ? deltaX - width : deltaX + width}px)`;
+  });
+
+  frame.addEventListener("touchend", () => {
+    if (!dragging) return;
+    dragging = false;
+
+    const width = frame.offsetWidth;
+    const progress = Math.abs(deltaX) / width;
+
+    imgCurrent.style.transition = "transform 0.35s ease";
+    imgNext.style.transition = "transform 0.35s ease";
+
+    if (progress > THRESHOLD) {
+      commitSwipe(deltaX < 0 ? 1 : -1);
+    } else {
+      cancelSwipe();
+    }
+  });
+
+  function commitSwipe(direction) {
+    const width = frame.offsetWidth;
+
+    imgCurrent.style.transform =
+      `translateX(${direction > 0 ? -width : width}px)`;
+    imgNext.style.transform = "translateX(0)";
+
+    setTimeout(() => {
+      index += direction;
+      imgCurrent.src = imgNext.src;
+      resetImages();
+      updateButtons();
+      preload(index + 1);
+      preload(index - 1);
+    }, 350);
+  }
+
+  function cancelSwipe() {
+    imgCurrent.style.transform = "translateX(0)";
+    imgNext.style.transform =
+      `translateX(${deltaX < 0 ? "100%" : "-100%"})`;
+
+    setTimeout(resetImages, 350);
+  }
+
+  function resetImages() {
+    imgCurrent.style.transition = "";
+    imgNext.style.transition = "";
+    imgCurrent.style.transform = "";
+    imgNext.style.transform = "";
+    imgNext.style.opacity = "0";
+    swipeTarget = null;
+  }
+
+  // boutons = même logique que swipe
+  btnPrev.onclick = e => {
+    e.stopPropagation();
+    if (index > 0) commitSwipe(-1);
+  };
+
+  btnNext.onclick = e => {
+    e.stopPropagation();
+    if (index < images.length - 1) commitSwipe(1);
+  };
+
+  btnClose.onclick = e => {
+    e.stopPropagation();
+    closeLightbox();
+  };
+
+  // bloque le swipe navigateur
+  document.addEventListener("touchmove", e => {
+    if (lightbox.style.display === "flex") e.preventDefault();
+  }, { passive: false });
+
+  // feed
+  document.querySelectorAll(".feed img").forEach(img => {
+    img.addEventListener("click", () => {
+      openLightbox(JSON.parse(img.dataset.images));
+    });
+  });
+</script>
   </body>
 </html>
