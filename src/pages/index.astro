@@ -14,7 +14,7 @@ const {
   NOTION_API_KEY,
   NOTION_DATABASE_ID,
   NOTION_PROFILE_DATABASE_ID
-} = import.meta.env;
+} = Astro.locals.runtime.env;
 
 const notion = new Client({ auth: NOTION_API_KEY });
 
