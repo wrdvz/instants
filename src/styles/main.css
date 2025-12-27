@@ -3,34 +3,171 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  display: flex;
-  justify-content: center;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
   background: white;
 }
 
-/* Feed Instagram-like */
-.feed {
-  width: 600px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
+/* ===== HEADER ===== */
+
+.profile {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
 }
 
-/* Images */
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-meta h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.profile-meta .bio p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+.profile-meta a {
+  font-size: 14px;
+  color: black;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* ===== FEED ===== */
+
+.feed {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
 .feed img {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
   display: block;
-  background: #eee;
+  background: #f2f2f2;
+  opacity: 0;
+  transition: opacity 0.25s ease-out;
 }
 
-/* Scale homothétique mobile */
-@media (max-width: 600px) {
+.feed img.loaded {
+  opacity: 1;
+}
+
+/* ===== LIGHTBOX ===== */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overscroll-behavior: contain;
+}
+
+/* Frame verrouillé 4/5 */
+.lightbox-frame {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  position: relative;
+  width: min(100vw, 80vh * 4 / 5);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+
+/* Images superposées */
+.lightbox-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  will-change: transform, opacity;
+}
+
+/* États */
+.img.current {
+  z-index: 1;
+}
+
+.img.next {
+  z-index: 2;
+  opacity: 0;
+}
+
+/* Animations */
+.enter-right { transform: translateX(100%); }
+.enter-left  { transform: translateX(-100%); }
+
+.exit-left  { transform: translateX(-100%); opacity: 0; }
+.exit-right { transform: translateX(100%);  opacity: 0; }
+
+.animate {
+  transition: transform 0.35s ease, opacity 0.25s ease;
+}
+
+/* ===== CONTROLS ===== */
+
+.lightbox .nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 48px;
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 16px;
+}
+
+.lightbox .prev { left: 0; }
+.lightbox .next { right: 0; }
+
+.lightbox .close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  font-size: 28px;
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (min-width: 768px) {
   .feed {
-    transform: scale(calc(100vw / 600));
-    transform-origin: top center;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .feed {
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    gap: 1px;
   }
 }
