@@ -162,29 +162,39 @@ frame.addEventListener("touchstart", e => {
 frame.addEventListener("touchmove", e => {
   if (!dragging) return;
 
-  deltaX = e.touches[0].clientX - startX;
-  const width = frame.offsetWidth;
+  const t = e.touches[0];
+  deltaX = t.clientX - startX;
+  deltaY = t.clientY - startY;
 
+  // 🔒 Détection d'intention
+  if (!locked) {
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      locked = true; // swipe horizontal
+    } else {
+      return; // geste vertical → on ignore
+    }
+  }
+
+  // À partir d’ici : swipe horizontal → on bloque Safari
+  e.preventDefault();
+
+  const width = frame.offsetWidth;
   const goingLeft = deltaX < 0;
   const atStart = index === 0;
   const atEnd = index === images.length - 1;
 
+  // résistance aux bords
   if ((atStart && !goingLeft) || (atEnd && goingLeft)) {
-    deltaX *= 0.35;
-    imgCurrent.style.transform = `translateX(${deltaX}px)`;
+    imgCurrent.style.transform = `translateX(${deltaX * 0.35}px)`;
     return;
   }
 
   const direction = goingLeft ? 1 : -1;
   const target = index + direction;
-
   if (!images[target]) return;
 
-  if (swipeTarget !== target) {
-    swipeTarget = target;
-    imgNext.src = images[target];
-    imgNext.style.opacity = "1";
-  }
+  imgNext.src = images[target];
+  imgNext.style.opacity = "1";
 
   imgCurrent.style.transform = `translateX(${deltaX}px)`;
   imgNext.style.transform =
