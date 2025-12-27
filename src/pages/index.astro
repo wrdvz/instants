@@ -1,4 +1,12 @@
 ---
+
+console.log("ENV CHECK", {
+  NOTION_API_KEY: !!NOTION_API_KEY,
+  NOTION_DATABASE_ID,
+  NOTION_PROFILE_DATABASE_ID
+});
+
+
 import { Client } from "@notionhq/client";
 import "../styles/main.css";
 
