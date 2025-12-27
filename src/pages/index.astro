@@ -67,74 +67,93 @@ const instants = response.results
 
     <!-- INTERACTIONS -->
     <script>
-  /* fade-in feed */
-  document.querySelectorAll(".feed img").forEach(img => {
-    if (img.complete) img.classList.add("loaded");
-    else img.addEventListener("load", () => img.classList.add("loaded"));
+/* fade-in feed */
+document.querySelectorAll(".feed img").forEach(img => {
+  if (img.complete) img.classList.add("loaded");
+  else img.addEventListener("load", () => img.classList.add("loaded"));
+});
+
+const lightbox = document.getElementById("lightbox");
+const frame = document.querySelector(".lightbox-frame");
+const imgCurrent = frame.querySelector(".img.current");
+const imgNext = frame.querySelector(".img.next");
+const btnPrev = lightbox.querySelector(".prev");
+const btnNext = lightbox.querySelector(".next");
+const btnClose = lightbox.querySelector(".close");
+const dotsContainer = lightbox.querySelector(".dots");
+
+let images = [];
+let index = 0;
+
+let startX = 0;
+let deltaX = 0;
+let dragging = false;
+let swipeTarget = null;
+
+const THRESHOLD = 0.25;
+
+/* ---------- Dots ---------- */
+
+function renderDots() {
+  dotsContainer.innerHTML = "";
+  images.forEach((_, i) => {
+    const dot = document.createElement("div");
+    dot.className = "dot" + (i === index ? " active" : "");
+    dotsContainer.appendChild(dot);
   });
+}
 
-  const lightbox = document.getElementById("lightbox");
-  const frame = document.querySelector(".lightbox-frame");
-
-  const imgCurrent = frame.querySelector(".img.current");
-  const imgNext = frame.querySelector(".img.next");
-  const btnPrev = lightbox.querySelector(".prev");
-  const btnNext = lightbox.querySelector(".next");
-  const btnClose = lightbox.querySelector(".close");
-const atStart = index === 0;
-const atEnd = index === images.length - 1;
-deltaX *= 0.35;
-
-  let images = [];
-  let index = 0;
-
-  let startX = 0;
-  let deltaX = 0;
-  let dragging = false;
-  let swipeTarget = null;
-
-  const THRESHOLD = 0.25;
-
-  function openLightbox(imgs) {
-    images = imgs;
-    index = 0;
-    imgCurrent.src = images[0];
-    imgCurrent.style.transform = "translateX(0)";
-    imgNext.style.opacity = "0";
-    lightbox.style.display = "flex";
-    updateButtons();
-    preload(1);
-  }
-
-  function closeLightbox() {
-    lightbox.style.display = "none";
-    images = [];
-  }
-
-  function updateButtons() {
-    btnPrev.style.display = index > 0 ? "block" : "none";
-    btnNext.style.display = index < images.length - 1 ? "block" : "none";
-  }
-
-  function preload(i) {
-    if (!images[i]) return;
-    const img = new Image();
-    img.src = images[i];
-  }
-
-  frame.addEventListener("touchstart", e => {
-    if (!images.length) return;
-
-    dragging = true;
-    startX = e.touches[0].clientX;
-    deltaX = 0;
-    swipeTarget = null;
-
-    imgCurrent.style.transition = "none";
-    imgNext.style.transition = "none";
+function updateDots() {
+  dotsContainer.querySelectorAll(".dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i === index);
   });
+}
 
-  frame.addEventListener("touchmove", e => {
+/* ---------- Lightbox ---------- */
+
+function openLightbox(imgs) {
+  images = imgs;
+  index = 0;
+  imgCurrent.src = images[0];
+  imgCurrent.style.transform = "translateX(0)";
+  imgNext.style.opacity = "0";
+  lightbox.style.display = "flex";
+  updateButtons();
+  renderDots();
+  preload(1);
+}
+
+function closeLightbox() {
+  lightbox.style.display = "none";
+  images = [];
+}
+
+function updateButtons() {
+  btnPrev.style.display = index > 0 ? "block" : "none";
+  btnNext.style.display = index < images.length - 1 ? "block" : "none";
+}
+
+function preload(i) {
+  if (!images[i]) return;
+  const img = new Image();
+  img.src = images[i];
+}
+
+/* ---------- Swipe ---------- */
+
+frame.addEventListener("touchstart", e => {
+  if (!images.length) return;
+
+  dragging = true;
+  startX = e.touches[0].clientX;
+  deltaX = 0;
+  swipeTarget = null;
+
+  imgCurrent.style.transition = "none";
+  imgNext.style.transition = "none";
+});
+
+frame.addEventListener("touchmove", e => {
   if (!dragging) return;
 
   deltaX = e.touches[0].clientX - startX;
@@ -144,9 +163,8 @@ deltaX *= 0.35;
   const atStart = index === 0;
   const atEnd = index === images.length - 1;
 
-  // EDGE RESISTANCE
   if ((atStart && !goingLeft) || (atEnd && goingLeft)) {
-    deltaX *= 0.35; // effet élastique
+    deltaX *= 0.35;
     imgCurrent.style.transform = `translateX(${deltaX}px)`;
     return;
   }
@@ -167,7 +185,7 @@ deltaX *= 0.35;
     `translateX(${deltaX > 0 ? deltaX - width : deltaX + width}px)`;
 });
 
-  frame.addEventListener("touchend", () => {
+frame.addEventListener("touchend", () => {
   if (!dragging) return;
   dragging = false;
 
@@ -181,7 +199,6 @@ deltaX *= 0.35;
   imgCurrent.style.transition = "transform 0.35s ease";
   imgNext.style.transition = "transform 0.35s ease";
 
-  // BORD → SNAP BACK
   if ((atStart && !goingLeft) || (atEnd && goingLeft)) {
     cancelSwipe();
     return;
@@ -194,85 +211,77 @@ deltaX *= 0.35;
   }
 });
 
-  function commitSwipe(direction) {
-    const width = frame.offsetWidth;
+function commitSwipe(direction) {
+  const width = frame.offsetWidth;
 
-    imgCurrent.style.transform =
-      `translateX(${direction > 0 ? -width : width}px)`;
-    imgNext.style.transform = "translateX(0)";
+  imgCurrent.style.transform =
+    `translateX(${direction > 0 ? -width : width}px)`;
+  imgNext.style.transform = "translateX(0)";
 
-    setTimeout(() => {
-      index += direction;
-      imgCurrent.src = imgNext.src;
-      resetImages();
-      updateButtons();
-      preload(index + 1);
-      preload(index - 1);
-    }, 350);
-  }
+  setTimeout(() => {
+    index += direction;
+    imgCurrent.src = imgNext.src;
+    resetImages();
+    updateButtons();
+    updateDots();
+    preload(index + 1);
+    preload(index - 1);
+  }, 350);
+}
 
-  function cancelSwipe() {
-    imgCurrent.style.transform = "translateX(0)";
-    imgNext.style.transform =
-      `translateX(${deltaX < 0 ? "100%" : "-100%"})`;
+function cancelSwipe() {
+  imgCurrent.style.transform = "translateX(0)";
+  imgNext.style.transform = "";
+  imgNext.style.opacity = "0";
 
-    setTimeout(resetImages, 350);
-  }
-
-  function resetImages() {
+  setTimeout(() => {
     imgCurrent.style.transition = "";
     imgNext.style.transition = "";
     imgCurrent.style.transform = "";
     imgNext.style.transform = "";
     imgNext.style.opacity = "0";
     swipeTarget = null;
-  }
-
-  // boutons = même logique que swipe
-  btnPrev.onclick = e => {
-    e.stopPropagation();
-    if (index > 0) commitSwipe(-1);
-  };
-
-  btnNext.onclick = e => {
-    e.stopPropagation();
-    if (index < images.length - 1) commitSwipe(1);
-  };
-
-  btnClose.onclick = e => {
-    e.stopPropagation();
-    closeLightbox();
-  };
-
-  // bloque le swipe navigateur
-  document.addEventListener("touchmove", e => {
-    if (lightbox.style.display === "flex") e.preventDefault();
-  }, { passive: false });
-
-  // feed
-  document.querySelectorAll(".feed img").forEach(img => {
-    img.addEventListener("click", () => {
-      openLightbox(JSON.parse(img.dataset.images));
-    });
-  });
-
-const dotsContainer = lightbox.querySelector(".dots");
-
-function renderDots() {
-  dotsContainer.innerHTML = "";
-  images.forEach((_, i) => {
-    const dot = document.createElement("div");
-    dot.className = "dot" + (i === index ? " active" : "");
-    dotsContainer.appendChild(dot);
-  });
+  }, 350);
 }
 
-function updateDots() {
-  dotsContainer.querySelectorAll(".dot").forEach((dot, i) => {
-    dot.classList.toggle("active", i === index);
-  });
+function resetImages() {
+  imgCurrent.style.transition = "";
+  imgNext.style.transition = "";
+  imgCurrent.style.transform = "";
+  imgNext.style.transform = "";
+  imgNext.style.opacity = "0";
+  swipeTarget = null;
 }
 
+/* ---------- Controls ---------- */
+
+btnPrev.onclick = e => {
+  e.stopPropagation();
+  if (index > 0) commitSwipe(-1);
+};
+
+btnNext.onclick = e => {
+  e.stopPropagation();
+  if (index < images.length - 1) commitSwipe(1);
+};
+
+btnClose.onclick = e => {
+  e.stopPropagation();
+  closeLightbox();
+};
+
+/* bloque swipe navigateur */
+document.addEventListener("touchmove", e => {
+  if (lightbox.style.display === "flex") e.preventDefault();
+}, { passive: false });
+
+/* feed */
+document.querySelectorAll(".feed img").forEach(img => {
+  img.addEventListener("click", () => {
+    openLightbox(JSON.parse(img.dataset.images));
+  });
+});
 </script>
+
   </body>
 </html>
