@@ -98,29 +98,33 @@ const profile = profilePage
 
   <body>
 
-    {profile && (
-      <header class="profile">
-        {profile.avatar && (
-          <img class="avatar" src={profile.avatar} alt={profile.name} />
-        )}
+    {profile ? (
+  <header class="profile">
+    <img
+      class="avatar"
+      src={profile.avatar}
+      alt={profile.name}
+      loading="eager"
+    />
 
-        <div class="profile-meta">
-          <h1>{profile.name}</h1>
+    <div class="profile-meta">
+      <h1>{profile.name}</h1>
 
-          <div class="bio">
-            {profile.bio.map(b => (
-              <p>{b.plain_text}</p>
-            ))}
-          </div>
+      <div class="bio">
+        {profile.bio.length > 0 &&
+          profile.bio.map((b) => (
+            <p>{b.plain_text}</p>
+          ))}
+      </div>
 
-          {profile.link && (
-            <a href={profile.link} target="_blank" rel="noopener">
-              {profile.link}
-            </a>
-          )}
-        </div>
-      </header>
-    )}
+      {profile.link && (
+        <a href={profile.link} target="_blank" rel="noopener">
+          {profile.link}
+        </a>
+      )}
+    </div>
+  </header>
+) : null}
 
     <main class="feed">
       {instants.map(i => (
@@ -266,7 +270,7 @@ frame.addEventListener("touchmove", e => {
 
   // résistance aux bords
   if ((atStart && !goingLeft) || (atEnd && goingLeft)) {
-    imgCurrent.style.transform = translateX(${deltaX * 0.35}px);
+    imgCurrent.style.transform = `translateX(${deltaX * 0.35}px)`;
     return;
   }
 
@@ -277,9 +281,9 @@ frame.addEventListener("touchmove", e => {
   imgNext.src = images[target];
   imgNext.style.opacity = "1";
 
-  imgCurrent.style.transform = translateX(${deltaX}px);
+  imgCurrent.style.transform = `translateX(${deltaX}px)`;
   imgNext.style.transform =
-    translateX(${deltaX > 0 ? deltaX - width : deltaX + width}px);
+    `translateX(${deltaX > 0 ? deltaX - width : deltaX + width}px)`;
 });
 
 frame.addEventListener("touchend", () => {
@@ -312,7 +316,7 @@ function commitSwipe(direction) {
   const width = frame.offsetWidth;
 
   imgCurrent.style.transform =
-    translateX(${direction > 0 ? -width : width}px);
+    `translateX(${direction > 0 ? -width : width}px)`;
   imgNext.style.transform = "translateX(0)";
 
   setTimeout(() => {
