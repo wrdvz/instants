@@ -57,9 +57,13 @@ const instants = response.results
     <img class="img next" />
   </div>
 
+<div class="dots"></div>
+
   <button class="nav prev">‹</button>
   <button class="nav next">›</button>
 </div>
+
+
 
     <!-- INTERACTIONS -->
     <script>
@@ -251,6 +255,24 @@ deltaX *= 0.35;
       openLightbox(JSON.parse(img.dataset.images));
     });
   });
+
+const dotsContainer = lightbox.querySelector(".dots");
+
+function renderDots() {
+  dotsContainer.innerHTML = "";
+  images.forEach((_, i) => {
+    const dot = document.createElement("div");
+    dot.className = "dot" + (i === index ? " active" : "");
+    dotsContainer.appendChild(dot);
+  });
+}
+
+function updateDots() {
+  dotsContainer.querySelectorAll(".dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i === index);
+  });
+}
+
 </script>
   </body>
 </html>
