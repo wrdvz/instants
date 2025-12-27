@@ -2,7 +2,11 @@
 import { Client } from "@notionhq/client";
 import "../styles/main.css";
 
-const { NOTION_API_KEY, NOTION_DATABASE_ID } = Astro.locals.runtime.env;
+const {
+  NOTION_API_KEY,
+  NOTION_DATABASE_ID,
+  NOTION_PROFILE_DATABASE_ID
+} = Astro.locals.runtime.env;
 
 const notion = new Client({ auth: NOTION_API_KEY });
 
@@ -46,6 +50,8 @@ const profile = profilePage
         profilePage.properties.Avatar?.files?.[0]?.external?.url,
     }
   : null;
+
+let swipeTarget = null;
 
 ---
 <!DOCTYPE html>
@@ -299,7 +305,7 @@ function cancelSwipe() {
     imgCurrent.style.transform = "";
     imgNext.style.transform = "";
     imgNext.style.opacity = "0";
-    swipeTarget = null;
+   
   }, 350);
 }
 
@@ -309,8 +315,12 @@ function resetImages() {
   imgCurrent.style.transform = "";
   imgNext.style.transform = "";
   imgNext.style.opacity = "0";
-  swipeTarget = null;
+  
 }
+
+frame.addEventListener("click", e => {
+  e.stopPropagation();
+});
 
 /* ---------- Controls ---------- */
 
