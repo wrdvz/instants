@@ -10,4 +10,4 @@ dist/
 .astro/
 
 # Cloudflare
-.wrangler/
+.wrangler/.DS_Store
