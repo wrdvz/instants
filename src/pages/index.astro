@@ -3,31 +3,26 @@ import { Client } from "@notionhq/client";
 import "../styles/main.css";
 
 /* ===============================
-   ENV (Cloudflare runtime only)
+   ENV (Cloudflare Pages compatible)
 ================================ */
 
 const {
   NOTION_API_KEY,
   NOTION_DATABASE_ID,
   NOTION_PROFILE_DATABASE_ID
-} = Astro.locals.runtime.env;
+} = import.meta.env;
 
-/* Guard rail anti-500 silencieux */
+/* Guard rail explicite */
 if (!NOTION_API_KEY || !NOTION_DATABASE_ID || !NOTION_PROFILE_DATABASE_ID) {
-  console.error("Missing environment variables", {
+  console.error("ENV MISSING", {
     NOTION_API_KEY: !!NOTION_API_KEY,
     NOTION_DATABASE_ID,
     NOTION_PROFILE_DATABASE_ID
   });
-  throw new Error("Missing Notion environment variables");
+  throw new Error("Missing environment variables");
 }
 
-/* Debug visible dans logs Cloudflare */
-console.log("ENV CHECK OK", {
-  NOTION_API_KEY: true,
-  NOTION_DATABASE_ID,
-  NOTION_PROFILE_DATABASE_ID
-});
+console.log("ENV OK");
 
 /* ===============================
    NOTION CLIENT
