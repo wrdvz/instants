@@ -71,11 +71,15 @@ const instants = response.results
 
   const lightbox = document.getElementById("lightbox");
   const frame = document.querySelector(".lightbox-frame");
+
   const imgCurrent = frame.querySelector(".img.current");
   const imgNext = frame.querySelector(".img.next");
   const btnPrev = lightbox.querySelector(".prev");
   const btnNext = lightbox.querySelector(".next");
   const btnClose = lightbox.querySelector(".close");
+const atStart = index === 0;
+const atEnd = index === images.length - 1;
+deltaX *= 0.35;
 
   let images = [];
   let index = 0;
@@ -127,25 +131,37 @@ const instants = response.results
   });
 
   frame.addEventListener("touchmove", e => {
-    if (!dragging) return;
+  if (!dragging) return;
 
-    deltaX = e.touches[0].clientX - startX;
-    const width = frame.offsetWidth;
-    const direction = deltaX < 0 ? 1 : -1;
-    const target = index + direction;
+  deltaX = e.touches[0].clientX - startX;
+  const width = frame.offsetWidth;
 
-    if (!images[target]) return;
+  const goingLeft = deltaX < 0;
+  const atStart = index === 0;
+  const atEnd = index === images.length - 1;
 
-    if (swipeTarget !== target) {
-      swipeTarget = target;
-      imgNext.src = images[target];
-      imgNext.style.opacity = "1";
-    }
-
+  // EDGE RESISTANCE
+  if ((atStart && !goingLeft) || (atEnd && goingLeft)) {
+    deltaX *= 0.35; // effet élastique
     imgCurrent.style.transform = `translateX(${deltaX}px)`;
-    imgNext.style.transform =
-      `translateX(${deltaX > 0 ? deltaX - width : deltaX + width}px)`;
-  });
+    return;
+  }
+
+  const direction = goingLeft ? 1 : -1;
+  const target = index + direction;
+
+  if (!images[target]) return;
+
+  if (swipeTarget !== target) {
+    swipeTarget = target;
+    imgNext.src = images[target];
+    imgNext.style.opacity = "1";
+  }
+
+  imgCurrent.style.transform = `translateX(${deltaX}px)`;
+  imgNext.style.transform =
+    `translateX(${deltaX > 0 ? deltaX - width : deltaX + width}px)`;
+});
 
   frame.addEventListener("touchend", () => {
     if (!dragging) return;
