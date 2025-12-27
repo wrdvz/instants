@@ -146,10 +146,14 @@ function preload(i) {
 frame.addEventListener("touchstart", e => {
   if (!images.length) return;
 
-  dragging = true;
-  startX = e.touches[0].clientX;
+  const t = e.touches[0];
+  startX = t.clientX;
+  startY = t.clientY;
+
   deltaX = 0;
-  swipeTarget = null;
+  deltaY = 0;
+  dragging = true;
+  locked = false;
 
   imgCurrent.style.transition = "none";
   imgNext.style.transition = "none";
