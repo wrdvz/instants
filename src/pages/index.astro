@@ -86,9 +86,11 @@ let images = [];
 let index = 0;
 
 let startX = 0;
+let startY = 0;
 let deltaX = 0;
+let deltaY = 0;
 let dragging = false;
-let swipeTarget = null;
+let locked = false; // ← clé
 
 const THRESHOLD = 0.25;
 
