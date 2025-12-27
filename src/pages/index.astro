@@ -26,6 +26,27 @@ const instants = response.results
   })
   .filter(Boolean);
 
+const profileRes = await notion.databases.query({
+  database_id: NOTION_PROFILE_DATABASE_ID,
+  filter: {
+    property: "Published",
+    checkbox: { equals: true },
+  },
+});
+
+const profilePage = profileRes.results[0];
+
+const profile = profilePage
+  ? {
+      name: profilePage.properties.Name?.title?.[0]?.plain_text ?? "",
+      bio: profilePage.properties.Bio?.rich_text ?? [],
+      link: profilePage.properties.Link?.url ?? "",
+      avatar:
+        profilePage.properties.Avatar?.files?.[0]?.file?.url ||
+        profilePage.properties.Avatar?.files?.[0]?.external?.url,
+    }
+  : null;
+
 ---
 <!DOCTYPE html>
 <html lang="fr">
@@ -36,6 +57,28 @@ const instants = response.results
   </head>
 
   <body>
+<!-- HEADER -->
+{profile && (
+  <header class="profile">
+    <img class="avatar" src={profile.avatar} alt={profile.name} />
+
+    <div class="profile-meta">
+      <h1>{profile.name}</h1>
+
+      <div class="bio">
+        {profile.bio.map(b => (
+          <p>{b.plain_text}</p>
+        ))}
+      </div>
+
+      {profile.link && (
+        <a href={profile.link} target="_blank" rel="noopener">
+          {profile.link}
+        </a>
+      )}
+    </div>
+  </header>
+)}
     <!-- FEED -->
     <main class="feed">
       {instants.map(i => (
