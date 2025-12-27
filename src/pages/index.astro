@@ -164,21 +164,31 @@ deltaX *= 0.35;
 });
 
   frame.addEventListener("touchend", () => {
-    if (!dragging) return;
-    dragging = false;
+  if (!dragging) return;
+  dragging = false;
 
-    const width = frame.offsetWidth;
-    const progress = Math.abs(deltaX) / width;
+  const width = frame.offsetWidth;
+  const progress = Math.abs(deltaX) / width;
 
-    imgCurrent.style.transition = "transform 0.35s ease";
-    imgNext.style.transition = "transform 0.35s ease";
+  const goingLeft = deltaX < 0;
+  const atStart = index === 0;
+  const atEnd = index === images.length - 1;
 
-    if (progress > THRESHOLD) {
-      commitSwipe(deltaX < 0 ? 1 : -1);
-    } else {
-      cancelSwipe();
-    }
-  });
+  imgCurrent.style.transition = "transform 0.35s ease";
+  imgNext.style.transition = "transform 0.35s ease";
+
+  // BORD → SNAP BACK
+  if ((atStart && !goingLeft) || (atEnd && goingLeft)) {
+    cancelSwipe();
+    return;
+  }
+
+  if (progress > THRESHOLD) {
+    commitSwipe(goingLeft ? 1 : -1);
+  } else {
+    cancelSwipe();
+  }
+});
 
   function commitSwipe(direction) {
     const width = frame.offsetWidth;
