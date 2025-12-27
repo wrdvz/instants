@@ -145,6 +145,70 @@ const instants = response.results
       lightbox.onclick = () => {
         lightbox.style.display = "none";
       };
+let startX = 0;
+let currentX = 0;
+let dragging = false;
+const SWIPE_THRESHOLD = 60;
+
+const frame = document.querySelector(".lightbox-frame");
+
+frame.addEventListener("touchstart", e => {
+  if (!images.length) return;
+
+  dragging = true;
+  startX = e.touches[0].clientX;
+  currentX = 0;
+
+  imgCurrent.style.transition = "none";
+  imgNext.style.transition = "none";
+});
+
+frame.addEventListener("touchmove", e => {
+  if (!dragging) return;
+
+  currentX = e.touches[0].clientX - startX;
+
+  const direction = currentX < 0 ? "right" : "left";
+  const targetIndex =
+    direction === "right" ? index + 1 : index - 1;
+
+  if (!images[targetIndex]) return;
+
+  imgNext.src = images[targetIndex];
+  imgNext.style.opacity = "1";
+  imgNext.style.transform =
+    `translateX(${currentX < 0 ? 100 + currentX / frame.offsetWidth * 100 : -100 + currentX / frame.offsetWidth * 100}%)`;
+
+  imgCurrent.style.transform = `translateX(${currentX}px)`;
+});
+
+frame.addEventListener("touchend", () => {
+  if (!dragging) return;
+  dragging = false;
+
+  imgCurrent.style.transition = "";
+  imgNext.style.transition = "";
+
+  if (Math.abs(currentX) > SWIPE_THRESHOLD) {
+    if (currentX < 0 && images[index + 1]) {
+      show(index + 1, "right");
+    } else if (currentX > 0 && images[index - 1]) {
+      show(index - 1, "left");
+    } else {
+      resetPosition();
+    }
+  } else {
+    resetPosition();
+  }
+});
+
+function resetPosition() {
+  imgCurrent.style.transform = "translateX(0)";
+  imgNext.style.transform = "";
+  imgNext.style.opacity = "0";
+}
+
+
     </script>
   </body>
 </html>
