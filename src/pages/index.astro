@@ -26,11 +26,6 @@ const instants = response.results
   })
   .filter(Boolean);
 
-document.addEventListener("touchmove", e => {
-  if (lightbox.style.display === "flex") {
-    e.preventDefault();
-  }
-}, { passive: false });
 ---
 <!DOCTYPE html>
 <html lang="fr">
@@ -55,16 +50,16 @@ document.addEventListener("touchmove", e => {
 
     <!-- LIGHTBOX -->
     <div id="lightbox" class="lightbox">
-      <button class="close">←</button>
-      <button class="nav prev">‹</button>
+  <button class="close">←</button>
 
-      <div class="lightbox-frame">
-        <img class="img current" />
-        <img class="img next" />
-      </div>
+  <div class="lightbox-frame">
+    <img class="img current" />
+    <img class="img next" />
+  </div>
 
-      <button class="nav next">›</button>
-    </div>
+  <button class="nav prev">‹</button>
+  <button class="nav next">›</button>
+</div>
 
     <!-- INTERACTIONS -->
     <script>
@@ -75,89 +70,47 @@ document.addEventListener("touchmove", e => {
       });
 
       const lightbox = document.getElementById("lightbox");
-      const btnPrev = lightbox.querySelector(".prev");
-      const btnNext = lightbox.querySelector(".next");
-      const btnClose = lightbox.querySelector(".close");
+const frame = document.querySelector(".lightbox-frame");
+const imgCurrent = frame.querySelector(".img.current");
+const imgNext = frame.querySelector(".img.next");
+const btnPrev = lightbox.querySelector(".prev");
+const btnNext = lightbox.querySelector(".next");
+const btnClose = lightbox.querySelector(".close");
 
-      const imgCurrent = lightbox.querySelector(".img.current");
-      const imgNext = lightbox.querySelector(".img.next");
+let images = [];
+let index = 0;
 
-      let images = [];
-      let index = 0;
-
-      function preload(i) {
-        if (!images[i]) return;
-        const img = new Image();
-        img.src = images[i];
-      }
-
-      function show(newIndex, direction = "right") {
-        if (newIndex < 0 || newIndex >= images.length) return;
-
-        const enter = direction === "right" ? "enter-right" : "enter-left";
-        const exit = direction === "right" ? "exit-left" : "exit-right";
-
-        imgNext.src = images[newIndex];
-        imgNext.className = `img next ${enter}`;
-
-        void imgNext.offsetWidth;
-
-        imgCurrent.classList.add("animate", exit);
-        imgNext.classList.add("animate");
-        imgNext.style.opacity = "1";
-
-        setTimeout(() => {
-          imgCurrent.src = imgNext.src;
-          imgCurrent.className = "img current";
-          imgNext.className = "img next";
-          imgNext.style.opacity = "0";
-        }, 350);
-
-        index = newIndex;
-        btnPrev.style.display = index > 0 ? "block" : "none";
-        btnNext.style.display = index < images.length - 1 ? "block" : "none";
-
-        preload(index + 1);
-        preload(index - 1);
-      }
-
-      document.querySelectorAll(".feed img").forEach(img => {
-        img.addEventListener("click", () => {
-          images = JSON.parse(img.dataset.images);
-          index = 0;
-          imgCurrent.src = images[0];
-          lightbox.style.display = "flex";
-          btnPrev.style.display = "none";
-          btnNext.style.display = images.length > 1 ? "block" : "none";
-          preload(1);
-        });
-      });
-
-      btnPrev.onclick = e => {
-        e.stopPropagation();
-        show(index - 1, "left");
-      };
-
-      btnNext.onclick = e => {
-        e.stopPropagation();
-        show(index + 1, "right");
-      };
-
-      btnClose.onclick = e => {
-        e.stopPropagation();
-        lightbox.style.display = "none";
-      };
-
-      lightbox.onclick = () => {
-        lightbox.style.display = "none";
-      };
 let startX = 0;
 let deltaX = 0;
 let dragging = false;
 
-const THRESHOLD = 0.25; // 25% de la largeur
+const THRESHOLD = 0.25;
 
-const frame = document.querySelector(".lightbox-frame");
+function openLightbox(imgs) {
+  images = imgs;
+  index = 0;
+  imgCurrent.src = images[0];
+  imgCurrent.style.transform = "translateX(0)";
+  imgNext.style.opacity = "0";
+  lightbox.style.display = "flex";
+  updateButtons();
+}
+
+function closeLightbox() {
+  lightbox.style.display = "none";
+  images = [];
+}
+
+function updateButtons() {
+  btnPrev.style.display = index > 0 ? "block" : "none";
+  btnNext.style.display = index < images.length - 1 ? "block" : "none";
+}
+
+function preload(i) {
+  if (!images[i]) return;
+  const img = new Image();
+  img.src = images[i];
+}
 
 frame.addEventListener("touchstart", e => {
   if (!images.length) return;
@@ -175,13 +128,12 @@ frame.addEventListener("touchmove", e => {
 
   deltaX = e.touches[0].clientX - startX;
   const width = frame.offsetWidth;
-
   const direction = deltaX < 0 ? 1 : -1;
-  const targetIndex = index + direction;
+  const target = index + direction;
 
-  if (!images[targetIndex]) return;
+  if (!images[target]) return;
 
-  imgNext.src = images[targetIndex];
+  imgNext.src = images[target];
   imgNext.style.opacity = "1";
 
   imgCurrent.style.transform = `translateX(${deltaX}px)`;
@@ -200,8 +152,7 @@ frame.addEventListener("touchend", () => {
   imgNext.style.transition = "transform 0.35s ease";
 
   if (progress > THRESHOLD) {
-    const direction = deltaX < 0 ? 1 : -1;
-    commitSwipe(direction);
+    commitSwipe(deltaX < 0 ? 1 : -1);
   } else {
     cancelSwipe();
   }
@@ -218,6 +169,7 @@ function commitSwipe(direction) {
     index += direction;
     imgCurrent.src = imgNext.src;
     resetImages();
+    updateButtons();
   }, 350);
 }
 
@@ -232,11 +184,43 @@ function cancelSwipe() {
 function resetImages() {
   imgCurrent.style.transition = "";
   imgNext.style.transition = "";
-
   imgCurrent.style.transform = "";
   imgNext.style.transform = "";
   imgNext.style.opacity = "0";
 }
+
+// boutons = même logique que swipe
+btnPrev.onclick = e => {
+  e.stopPropagation();
+  if (index > 0) commitSwipe(-1);
+};
+
+btnNext.onclick = e => {
+  e.stopPropagation();
+  if (index < images.length - 1) commitSwipe(1);
+};
+
+btnClose.onclick = e => {
+  e.stopPropagation();
+  closeLightbox();
+};
+
+document.addEventListener("touchmove", e => {
+  if (lightbox.style.display === "flex") e.preventDefault();
+}, { passive: false });
+
+// feed
+document.querySelectorAll(".feed img").forEach(img => {
+  img.addEventListener("click", () => {
+    openLightbox(JSON.parse(img.dataset.images));
+  });
+});
+
+document.addEventListener("touchmove", e => {
+  if (lightbox.style.display === "flex") {
+    e.preventDefault();
+  }
+}, { passive: false });
 
     </script>
   </body>
