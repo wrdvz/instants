@@ -152,9 +152,10 @@ document.addEventListener("touchmove", e => {
         lightbox.style.display = "none";
       };
 let startX = 0;
-let currentX = 0;
+let deltaX = 0;
 let dragging = false;
-const SWIPE_THRESHOLD = 60;
+
+const THRESHOLD = 0.25; // 25% de la largeur
 
 const frame = document.querySelector(".lightbox-frame");
 
@@ -163,7 +164,7 @@ frame.addEventListener("touchstart", e => {
 
   dragging = true;
   startX = e.touches[0].clientX;
-  currentX = 0;
+  deltaX = 0;
 
   imgCurrent.style.transition = "none";
   imgNext.style.transition = "none";
@@ -172,48 +173,70 @@ frame.addEventListener("touchstart", e => {
 frame.addEventListener("touchmove", e => {
   if (!dragging) return;
 
-  currentX = e.touches[0].clientX - startX;
+  deltaX = e.touches[0].clientX - startX;
+  const width = frame.offsetWidth;
 
-  const direction = currentX < 0 ? "right" : "left";
-  const targetIndex =
-    direction === "right" ? index + 1 : index - 1;
+  const direction = deltaX < 0 ? 1 : -1;
+  const targetIndex = index + direction;
 
   if (!images[targetIndex]) return;
 
   imgNext.src = images[targetIndex];
   imgNext.style.opacity = "1";
-  imgNext.style.transform =
-    `translateX(${currentX < 0 ? 100 + currentX / frame.offsetWidth * 100 : -100 + currentX / frame.offsetWidth * 100}%)`;
 
-  imgCurrent.style.transform = `translateX(${currentX}px)`;
+  imgCurrent.style.transform = `translateX(${deltaX}px)`;
+  imgNext.style.transform =
+    `translateX(${deltaX > 0 ? deltaX - width : deltaX + width}px)`;
 });
 
 frame.addEventListener("touchend", () => {
   if (!dragging) return;
   dragging = false;
 
-  imgCurrent.style.transition = "";
-  imgNext.style.transition = "";
+  const width = frame.offsetWidth;
+  const progress = Math.abs(deltaX) / width;
 
-  if (Math.abs(currentX) > SWIPE_THRESHOLD) {
-    if (currentX < 0 && images[index + 1]) {
-      show(index + 1, "right");
-    } else if (currentX > 0 && images[index - 1]) {
-      show(index - 1, "left");
-    } else {
-      resetPosition();
-    }
+  imgCurrent.style.transition = "transform 0.35s ease";
+  imgNext.style.transition = "transform 0.35s ease";
+
+  if (progress > THRESHOLD) {
+    const direction = deltaX < 0 ? 1 : -1;
+    commitSwipe(direction);
   } else {
-    resetPosition();
+    cancelSwipe();
   }
 });
 
-function resetPosition() {
+function commitSwipe(direction) {
+  const width = frame.offsetWidth;
+
+  imgCurrent.style.transform =
+    `translateX(${direction > 0 ? -width : width}px)`;
+  imgNext.style.transform = "translateX(0)";
+
+  setTimeout(() => {
+    index += direction;
+    imgCurrent.src = imgNext.src;
+    resetImages();
+  }, 350);
+}
+
+function cancelSwipe() {
   imgCurrent.style.transform = "translateX(0)";
+  imgNext.style.transform =
+    `translateX(${deltaX < 0 ? "100%" : "-100%"})`;
+
+  setTimeout(resetImages, 350);
+}
+
+function resetImages() {
+  imgCurrent.style.transition = "";
+  imgNext.style.transition = "";
+
+  imgCurrent.style.transform = "";
   imgNext.style.transform = "";
   imgNext.style.opacity = "0";
 }
-
 
     </script>
   </body>
