@@ -12,6 +12,42 @@ body {
   background: white;
 }
 
+/* ===== HEADER ===== */
+
+.profile {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-meta h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.profile-meta .bio p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+.profile-meta a {
+  font-size: 14px;
+  color: black;
+  text-decoration: none;
+  font-weight: 500;
+}
+
 /* ===== FEED ===== */
 
 .feed {
