@@ -4,16 +4,11 @@ import "../styles/main.css";
 
 const { NOTION_API_KEY, NOTION_DATABASE_ID } = Astro.locals.runtime.env;
 
-const notion = new Client({
-  auth: NOTION_API_KEY,
-});
+const notion = new Client({ auth: NOTION_API_KEY });
 
 const response = await notion.databases.query({
   database_id: NOTION_DATABASE_ID,
-  filter: {
-    property: "Published",
-    checkbox: { equals: true },
-  },
+  filter: { property: "Published", checkbox: { equals: true } },
   sorts: [{ property: "Order", direction: "ascending" }],
 });
 
@@ -26,14 +21,11 @@ const instants = response.results
 
     return {
       title: page.properties.Title?.title?.[0]?.plain_text ?? "",
-      images: imageProp.files.map(
-        f => f.file?.url || f.external?.url
-      ),
+      images: imageProp.files.map(f => f.file?.url || f.external?.url),
     };
   })
   .filter(Boolean);
 ---
-
 <!DOCTYPE html>
 <html lang="fr">
   <head>
@@ -59,111 +51,100 @@ const instants = response.results
     <div id="lightbox" class="lightbox">
       <button class="close">←</button>
       <button class="nav prev">‹</button>
-     <div class="lightbox-frame">
-  <img class="img current" />
-  <img class="img next" />
-</div>
+
+      <div class="lightbox-frame">
+        <img class="img current" />
+        <img class="img next" />
+      </div>
+
       <button class="nav next">›</button>
     </div>
 
     <!-- INTERACTIONS -->
     <script>
-      // Fade-in images
+      /* fade-in feed */
       document.querySelectorAll(".feed img").forEach(img => {
-        if (img.complete) {
-          img.classList.add("loaded");
-        } else {
-          img.addEventListener("load", () => {
-            img.classList.add("loaded");
-          });
-        }
+        if (img.complete) img.classList.add("loaded");
+        else img.addEventListener("load", () => img.classList.add("loaded"));
       });
 
-      // Lightbox carousel
-    
-  const lightbox = document.getElementById("lightbox");
-  const lightboxImg = lightbox.querySelector("img");
-  const btnPrev = lightbox.querySelector(".prev");
-  const btnNext = lightbox.querySelector(".next");
-  const btnClose = lightbox.querySelector(".close");
+      const lightbox = document.getElementById("lightbox");
+      const btnPrev = lightbox.querySelector(".prev");
+      const btnNext = lightbox.querySelector(".next");
+      const btnClose = lightbox.querySelector(".close");
 
-  let images = [];
-  let index = 0;
+      const imgCurrent = lightbox.querySelector(".img.current");
+      const imgNext = lightbox.querySelector(".img.next");
 
-  function preload(i) {
-    if (!images[i]) return;
-    const img = new Image();
-    img.src = images[i];
-  }
+      let images = [];
+      let index = 0;
 
-  function show(newIndex, direction = "right") {
-  if (newIndex < 0 || newIndex >= images.length) return;
+      function preload(i) {
+        if (!images[i]) return;
+        const img = new Image();
+        img.src = images[i];
+      }
 
-  const incomingClass =
-    direction === "right" ? "slide-in-right" : "slide-in-left";
+      function show(newIndex, direction = "right") {
+        if (newIndex < 0 || newIndex >= images.length) return;
 
-  // Nettoyage ciblé (PAS className = "")
-  lightboxImg.classList.remove(
-    "slide-in-right",
-    "slide-in-left",
-    "slide-active"
-  );
+        const enter = direction === "right" ? "enter-right" : "enter-left";
+        const exit = direction === "right" ? "exit-left" : "exit-right";
 
-  // coupe la transition pour le reset
-  lightboxImg.style.transition = "none";
-  lightboxImg.src = images[newIndex];
+        imgNext.src = images[newIndex];
+        imgNext.className = `img next ${enter}`;
 
-  // preload voisins
-  preload(newIndex + 1);
-  preload(newIndex - 1);
+        void imgNext.offsetWidth;
 
-  // force reflow
-  void lightboxImg.offsetWidth;
+        imgCurrent.classList.add("animate", exit);
+        imgNext.classList.add("animate");
+        imgNext.style.opacity = "1";
 
-  // applique animation
-  lightboxImg.classList.add(incomingClass);
+        setTimeout(() => {
+          imgCurrent.src = imgNext.src;
+          imgCurrent.className = "img current";
+          imgNext.className = "img next";
+          imgNext.style.opacity = "0";
+        }, 350);
 
-  requestAnimationFrame(() => {
-    lightboxImg.style.transition = "";
-    lightboxImg.classList.add("slide-active");
-  });
+        index = newIndex;
+        btnPrev.style.display = index > 0 ? "block" : "none";
+        btnNext.style.display = index < images.length - 1 ? "block" : "none";
 
-  index = newIndex;
+        preload(index + 1);
+        preload(index - 1);
+      }
 
-  btnPrev.style.display = index > 0 ? "block" : "none";
-  btnNext.style.display = index < images.length - 1 ? "block" : "none";
-}
+      document.querySelectorAll(".feed img").forEach(img => {
+        img.addEventListener("click", () => {
+          images = JSON.parse(img.dataset.images);
+          index = 0;
+          imgCurrent.src = images[0];
+          lightbox.style.display = "flex";
+          btnPrev.style.display = "none";
+          btnNext.style.display = images.length > 1 ? "block" : "none";
+          preload(1);
+        });
+      });
 
-  document.querySelectorAll(".feed img").forEach(img => {
-    img.addEventListener("click", () => {
-      images = JSON.parse(img.dataset.images);
-      index = 0;
-      lightbox.style.display = "flex";
-      show(0);
-    });
-  });
+      btnPrev.onclick = e => {
+        e.stopPropagation();
+        show(index - 1, "left");
+      };
 
-  btnPrev.onclick = e => {
-    e.stopPropagation();
-    show(index - 1, "left");
-  };
+      btnNext.onclick = e => {
+        e.stopPropagation();
+        show(index + 1, "right");
+      };
 
-  btnNext.onclick = e => {
-    e.stopPropagation();
-    show(index + 1, "right");
-  };
+      btnClose.onclick = e => {
+        e.stopPropagation();
+        lightbox.style.display = "none";
+      };
 
-  btnClose.onclick = e => {
-    e.stopPropagation();
-    lightbox.style.display = "none";
-    lightboxImg.src = "";
-  };
-
-  lightbox.onclick = () => {
-    lightbox.style.display = "none";
-    lightboxImg.src = "";
-  };
-
+      lightbox.onclick = () => {
+        lightbox.style.display = "none";
+      };
     </script>
   </body>
 </html>
