@@ -270,10 +270,7 @@ btnClose.onclick = e => {
   closeLightbox();
 };
 
-/* bloque swipe navigateur */
-document.addEventListener("touchmove", e => {
-  if (lightbox.style.display === "flex") e.preventDefault();
-}, { passive: false });
+
 
 /* feed */
 document.querySelectorAll(".feed img").forEach(img => {
