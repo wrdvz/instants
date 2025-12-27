@@ -25,6 +25,12 @@ const instants = response.results
     };
   })
   .filter(Boolean);
+
+document.addEventListener("touchmove", e => {
+  if (lightbox.style.display === "flex") {
+    e.preventDefault();
+  }
+}, { passive: false });
 ---
 <!DOCTYPE html>
 <html lang="fr">
