@@ -1,4 +1,7 @@
-/* Reset minimal */
+/* ======================================================
+   RESET & BASE
+====================================================== */
+
 * {
   box-sizing: border-box;
 }
@@ -7,17 +10,25 @@ html,
 body {
   margin: 0;
   padding: 0;
-  width: 100%;
-  overflow-x: hidden;
   background: white;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #000;
 }
 
-/* ===== HEADER ===== */
+/* ======================================================
+   PROFILE (home)
+====================================================== */
 
 .profile {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  background: white;
   max-width: 960px;
-  margin: 24px auto;
-  padding: 0 16px;
+  margin: 0 auto;
+  padding: 16px;
+
   display: flex;
   gap: 16px;
   align-items: center;
@@ -35,24 +46,19 @@ body {
   margin: 0;
 }
 
-.profile-meta .bio p {
+.profile-meta p {
   margin: 4px 0;
   font-size: 14px;
   color: #444;
 }
 
-.profile-meta a {
-  font-size: 14px;
-  color: black;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-/* ===== FEED ===== */
+/* ======================================================
+   FEED
+====================================================== */
 
 .feed {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 2px;
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -62,112 +68,112 @@ body {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  display: block;
   background: #f2f2f2;
   opacity: 0;
-  transition: opacity 0.25s ease-out;
+  transition: opacity 0.25s ease;
 }
 
 .feed img.loaded {
   opacity: 1;
 }
 
-/* ===== LIGHTBOX ===== */
+/* ======================================================
+   LIGHTBOX / POST
+====================================================== */
 
 .lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.95);
-  display: none;
-  justify-content: center;
-  align-items: center;
+  background: white;
   z-index: 1000;
-  overscroll-behavior: contain;
+  display: none;
 }
 
-/* Frame verrouillé 4/5 */
+/* Topbar */
+.post-topbar {
+  position: fixed;
+  top: 0;
+  height: 56px;
+  width: 100%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.topbar-back {
+  position: absolute;
+  left: 16px;
+  font-size: 24px;
+  background: none;
+  border: none;
+}
+
+/* Post scroll */
+.post {
+  padding-top: 56px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Mini header */
+.post-header {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  align-items: center;
+}
+
+.post-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+/* Image swipe */
 .lightbox-frame {
-  touch-action: pan-y;
-  overscroll-behavior: contain;
   position: relative;
-  width: min(100vw, 80vh * 4 / 5);
   aspect-ratio: 4 / 5;
   overflow: hidden;
+  touch-action: pan-y;
 }
 
-/* Images superposées */
 .lightbox-frame img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  will-change: transform, opacity;
 }
 
-/* États */
-.img.current {
-  z-index: 1;
+/* Caption */
+.post-meta {
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
-.img.next {
-  z-index: 2;
-  opacity: 0;
-}
-
-/* Animations */
-.enter-right { transform: translateX(100%); }
-.enter-left  { transform: translateX(-100%); }
-
-.exit-left  { transform: translateX(-100%); opacity: 0; }
-.exit-right { transform: translateX(100%);  opacity: 0; }
-
-.animate {
-  transition: transform 0.35s ease, opacity 0.25s ease;
-}
-
-/* ===== CONTROLS ===== */
-
-.lightbox .nav {
-  position: absolute;
+/* Nav */
+.nav {
+  position: fixed;
   top: 50%;
-  transform: translateY(-50%);
-  font-size: 48px;
-  color: white;
+  font-size: 40px;
   background: none;
   border: none;
-  cursor: pointer;
-  padding: 0 16px;
-}
-
-.lightbox .prev { left: 0; }
-.lightbox .next { right: 0; }
-
-.lightbox .close {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  font-size: 28px;
   color: white;
-  background: none;
-  border: none;
-  cursor: pointer;
 }
 
-/* ===== RESPONSIVE ===== */
+.nav.prev { left: 8px; }
+.nav.next { right: 8px; }
+
+/* ======================================================
+   RESPONSIVE
+====================================================== */
 
 @media (min-width: 768px) {
   .feed {
     max-width: 960px;
     margin: 0 auto;
-  }
-}
-
-@media (max-width: 767px) {
-  .feed {
-    width: 100vw;
-    margin: 0;
-    padding: 0;
-    gap: 1px;
   }
 }
