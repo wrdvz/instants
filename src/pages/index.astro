@@ -50,10 +50,17 @@ const postsRes = await notion.databases.query({
 const posts = postsRes.results
   .map((page) => {
     const files = page.properties.Image?.files;
-    if (!files?.length) return null;
+    
+    const images = files
+  .map(f => f.file?.url || f.external?.url)
+  .filter(Boolean);
+
+if (!images.length) return null;
 
     return {
-      images: files.map(f => f.file?.url || f.external?.url),
+      images: files
+  .map(f => f.file?.url || f.external?.url)
+  .filter(Boolean),
       caption: page.properties.Caption?.rich_text?.[0]?.plain_text ?? "",
       date: page.properties.Date?.date?.start ?? ""
     };
@@ -101,17 +108,30 @@ const profile = {
   />
 </head>
 
+
+
 <body>
 
 <!-- ======================================================
      SECTION G — HEADER HOME (profil)
 ====================================================== -->
+
 <header class="profile">
   <img class="avatar" src={profile.avatar} alt={profile.name} />
+
   <div class="profile-text">
     <h1>{profile.name}</h1>
     {profile.bio.map(b => <p>{b.plain_text}</p>)}
   </div>
+
+  <button class="contact-btn" aria-label="Me contacter">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12
+           59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+    </svg>
+  </button>
 </header>
 
 <!-- ======================================================
@@ -129,6 +149,15 @@ const profile = {
     />
   ))}
 </main>
+
+<div class="contact-sheet">
+  <div class="contact-sheet-backdrop"></div>
+  <div class="contact-sheet-panel">
+    <button class="sheet-action mail">Envoyer un mail</button>
+    <button class="sheet-action copy">Copier l’adresse</button>
+    <button class="sheet-cancel">Annuler</button>
+  </div>
+</div>
 
 <!-- ======================================================
   SECTION I — OVERLAY POST (lightbox)
@@ -162,6 +191,7 @@ const profile = {
     <div class="image-wrapper">
       <img class="img current" />
       <img class="img next" />
+      <div class="glass"></div>
 
       <button class="nav prev icon-btn">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
@@ -196,17 +226,22 @@ const profile = {
 
    
 
+
 <!-- ======================================================
      SECTION J — SCRIPT CLIENT (interactions)
 ====================================================== -->
 <script>
 (() => {
 
+
+  
   document.addEventListener("DOMContentLoaded", () => {
 
     /* =========================
        DOM
     ========================= */
+
+   
     const lightbox = document.getElementById("lightbox");
     const frame = document.querySelector(".image-wrapper");
     const imgCurrent = document.querySelector(".img.current");
@@ -217,6 +252,64 @@ const profile = {
     const likeBtn = document.querySelector(".like-btn");
     const prevBtn = document.querySelector(".nav.prev");
     const nextBtn = document.querySelector(".nav.next");
+    const glass = document.querySelector(".glass");
+    const PANEL_EASING = "cubic-bezier(0.22,1,0.36,1)";
+    const PANEL_DURATION = 0.5; // en secondes
+    
+    const contactBtn = document.querySelector(".contact-btn");
+    const sheet = document.querySelector(".contact-sheet");
+    const backdrop = document.querySelector(".contact-sheet-backdrop");
+    const cancelBtn = document.querySelector(".sheet-cancel");
+
+    const mailBtn = document.querySelector(".sheet-action.mail");
+    const copyBtn = document.querySelector(".sheet-action.copy");
+    const email = "edward.vizard@icloud.com";
+
+  
+
+function openSheet() {
+  console.log("🟢 openSheet()");
+  sheet.classList.add("is-open");
+  document.body.classList.add("sheet-open");
+}
+
+function closeSheet() {
+  console.log("🔴 closeSheet()");
+  sheet.classList.remove("is-open");
+  document.body.classList.remove("sheet-open");
+}
+
+contactBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  openSheet();
+});
+
+mailBtn.addEventListener("click", () => {
+  closeSheet();
+
+  setTimeout(() => {
+    const subject = "Contact";
+    const body = "";
+
+    window.location.href =
+      `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }, 150);
+});
+
+copyBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(email);
+
+    closeSheet();
+
+    console.log("📋 Email copié :", email);
+  } catch (err) {
+    console.error("❌ Impossible de copier", err);
+  }
+});
+
+backdrop.addEventListener("click", closeSheet);
+cancelBtn.addEventListener("click", closeSheet);
 
     if (!lightbox || !frame || !imgCurrent) return;
 
@@ -226,6 +319,7 @@ const profile = {
     let images = [];
     let index = 0;
     let isAnimating = false;
+    const loadedImages = new Set();
 
     /* =========================
        HELPERS
@@ -236,45 +330,91 @@ const profile = {
   imgNext.style.transform = "";
   imgNext.style.opacity = "0";
   imgNext.classList.remove("loading");
+
+  
 }
 
-    function goToImage(direction) {
+    function goToImage(direction, startX = 0) {
   if (isAnimating) return;
 
   const target = index + direction;
   if (!images[target]) return;
 
   isAnimating = true;
-  const width = frame.offsetWidth;
 
-  imgNext.src = images[target];
+  index = target;
+    updateNav();
+
+  const width = frame.offsetWidth;
+  const src = images[target];
+  const needsLoading = !loadedImages.has(src);
+
+  imgNext.src = src;
   imgNext.style.opacity = "1";
 
-  // 1️⃣ attendre que l’image soit vraiment prête
-  imgNext.decode().then(() => {
+  if (needsLoading) {
+    glass.style.opacity = "1";
+  }
 
-    imgCurrent.style.transition =
-      "transform 0.35s cubic-bezier(0.22,1,0.36,1)";
-    imgNext.style.transition =
-      "transform 0.35s cubic-bezier(0.22,1,0.36,1)";
+  // figer la position EXACTE du drag
+  imgCurrent.style.transition = "none";
+  imgNext.style.transition = "none";
 
-    imgCurrent.style.transform =
-      `translateX(${direction > 0 ? -width : width}px)`;
-    imgNext.style.transform = "translateX(0)";
+  imgCurrent.style.transform = `translateX(${startX}px)`;
+  imgNext.style.transform =
+    `translateX(${startX + (direction > 0 ? width : -width)}px)`;
 
-    // 2️⃣ swap uniquement après animation
-    setTimeout(() => {
-      imgCurrent.src = imgNext.src;
-      imgCurrent.style.transform = "translateX(0)";
-      imgCurrent.style.transition = "";
+  // forcer le layout
+  imgCurrent.offsetHeight;
 
-      resetImages();
-      index = target;
-      isAnimating = false;
-    }, 350);
+  // animation unique
+  imgCurrent.style.transition =
+    "transform 0.35s cubic-bezier(0.22,1,0.36,1)";
+  imgNext.style.transition =
+    "transform 0.35s cubic-bezier(0.22,1,0.36,1)";
 
-  });
+  imgCurrent.style.transform =
+    `translateX(${direction > 0 ? -width : width}px)`;
+  imgNext.style.transform = "translateX(0)";
+
+  setTimeout(() => {
+    imgCurrent.src = src;
+    imgCurrent.style.transform = "translateX(0)";
+    imgCurrent.style.transition = "";
+
+    imgNext.style.opacity = "0";
+    imgNext.style.transition = "";
+    imgNext.style.transform = "";
+
+    loadedImages.add(src);
+    glass.style.opacity = "0";
+
+    
+    isAnimating = false;
+  }, 350);
 }
+
+function cancelSwipe(direction) {
+  const width = frame.offsetWidth;
+
+  imgCurrent.style.transition =
+    "transform 0.25s cubic-bezier(0.22,1,0.36,1)";
+  imgNext.style.transition =
+    "transform 0.25s cubic-bezier(0.22,1,0.36,1)";
+
+  imgCurrent.style.transform = "translateX(0)";
+  imgNext.style.transform =
+    `translateX(${direction > 0 ? width : -width}px)`;
+
+  glass.style.opacity = "0";
+
+  setTimeout(() => {
+    imgNext.style.opacity = "0";
+    imgNext.style.transition = "";
+    imgNext.style.transform = "";
+  }, 250);
+}
+
 
   function rubberBand() {
   imgCurrent.style.transition =
@@ -285,30 +425,119 @@ const profile = {
 let gesture = null; // "horizontal" | "vertical" | null
 const LOCK_THRESHOLD = 8;
 
+function preloadImages(imageUrls) {
+  return Promise.all(
+    imageUrls.map(src => {
+      if (loadedImages.has(src)) return Promise.resolve();
+
+      const img = new Image();
+      img.src = src;
+
+      return img.decode()
+        .then(() => {
+          loadedImages.add(src);
+        })
+        .catch(() => {});
+    })
+  );
+}
+
+function updateNav() {
+  // s’il n’y a qu’une image → aucune flèche
+  if (images.length <= 1) {
+    prevBtn.style.display = "none";
+    nextBtn.style.display = "none";
+    return;
+  }
+
+  // flèche gauche
+  prevBtn.style.display = index > 0 ? "flex" : "none";
+
+  // flèche droite
+  nextBtn.style.display = index < images.length - 1 ? "flex" : "none";
+}
+
+
+
+
     /* =========================
        OPEN POST
     ========================= */
+
+
     document.querySelectorAll(".feed img").forEach(img => {
-      img.addEventListener("click", () => {
-        images = JSON.parse(img.dataset.images);
-        index = 0;
+  img.addEventListener("click", (e) => {
+    e.stopPropagation();
 
-        imgCurrent.src = images[0];
-        captionEl.textContent = img.dataset.caption || "";
-        if (dateEl) dateEl.textContent = img.dataset.date || "";
+    
 
-        lightbox.style.display = "block";
-        document.body.style.overflow = "hidden";
-      });
+    images = JSON.parse(img.dataset.images);
+    index = 0;
+    updateNav();
+
+    imgCurrent.src = images[0];
+    imgCurrent.classList.add("loading");
+
+    loadedImages.add(images[0]);
+
+    captionEl.textContent = img.dataset.caption || "";
+    if (dateEl) dateEl.textContent = img.dataset.date || "";
+
+    lightbox.style.display = "block";
+    lightbox.style.transition = "none";
+    lightbox.style.transform = "translateX(100%)";
+    lightbox.offsetHeight;
+    lightbox.style.transition =
+      `transform ${PANEL_DURATION}s ${PANEL_EASING}`;
+    lightbox.style.transform = "translateX(0)";
+
+    document.body.style.overflow = "hidden";
+
+    preloadImages(images).then(() => {
+      imgCurrent.classList.remove("loading");
     });
+  });
+});
+
+
+
 
     /* =========================
        CLOSE
     ========================= */
+
+  
+
     backBtn.addEventListener("click", () => {
-      lightbox.style.display = "none";
-      document.body.style.overflow = "";
-    });
+
+     
+
+  // 1️⃣ forcer la position de départ EXACTE (plein écran)
+  lightbox.style.transition = "none";
+  lightbox.style.transform = "translateX(0)";
+
+  // forcer le layout
+  lightbox.offsetHeight;
+
+  // 2️⃣ lancer l’animation de sortie
+  lightbox.style.transition =
+  `transform ${PANEL_DURATION}s ${PANEL_EASING}`;
+  lightbox.style.transform = "translateX(100%)";
+
+  // 3️⃣ cleanup après animation
+  setTimeout(() => {
+    lightbox.style.display = "none";
+    lightbox.style.transition = "";
+    lightbox.style.transform = "";
+  }, 350);
+
+  // reset UI
+  prevBtn.style.display = "none";
+  nextBtn.style.display = "none";
+  document.body.style.overflow = "";
+
+});
+    
 
     /* =========================
        BUTTONS
@@ -339,13 +568,16 @@ let deltaX = 0;
 let deltaY = 0; 
     let dragging = false;
 
-    frame.addEventListener("touchstart", e => {
+  
+  frame.addEventListener("touchstart", e => {
   startX = e.touches[0].clientX;
   startY = e.touches[0].clientY;
   deltaX = 0;
   deltaY = 0;
   dragging = true;
   gesture = null;
+
+  glass.style.opacity = "0";
 
   imgCurrent.style.transition = "none";
   imgNext.style.transition = "none";
@@ -418,17 +650,22 @@ let deltaY = 0;
   const target = index + direction;
 
   if (progress > 0.2 && images[target]) {
-    goToImage(direction);
-  } else {
-    rubberBand();
-  
-  }
+  goToImage(direction, deltaX);
+} else {
+  cancelSwipe(direction);
+
+}
 });
 
   });
 
 })();
+
+
+
+
 </script>
+
 
 
 </body>
